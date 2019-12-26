@@ -9,11 +9,12 @@ using System.IO.Compression;
 
 namespace LogArchiveTool
 {
-    class Lib7z
+    class Zipper  //class Lib7z
     {
-        public void zipper()
-        {
-
+        
+        
+      public Zipper()
+          {
             string zipExe = @"C:\Program Files\7-Zip\7z.exe";
             string baseDir = @"D:\BPS\DMS\Logs\";
             string tmp = @"D:\BPS\DMS\Logs\Temp\";
@@ -66,6 +67,8 @@ namespace LogArchiveTool
 
             Directory.Delete(tmp, true);
             Console.ReadKey();
-        }
+       }
     }
 }
+    
+

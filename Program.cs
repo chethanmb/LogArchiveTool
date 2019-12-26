@@ -64,6 +64,11 @@ namespace LogArchiveTool
 
             }
             Console.ReadLine();
+        
+        Zipper zip = new Zipper();
+
+            
+
         }
     }
 }
