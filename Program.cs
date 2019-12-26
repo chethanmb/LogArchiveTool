@@ -32,7 +32,7 @@ namespace LogArchiveTool
                     int crtMonth = dtCreationTime.Month;
                     int diff = curMonth - crtMonth;
 
-                    if (diff >= 1)
+                    if (diff >= 0)
                     {
                         {
                             string srcFileName = Tempfile.Name; //only the filename
@@ -63,36 +63,13 @@ namespace LogArchiveTool
 
 
             }
-            Console.ReadLine();
-        
-        Zipper zip = new Zipper();
-
-            
-
+            //Console.ReadLine();
+            string zipExe = @"C:\Program Files\7-Zip\7z.exe";
+            string baseDir = @"D:\BPS\DMS\Logs\";
+            string tmp = @"D:\BPS\DMS\Logs\Temp\";
+            string sourceDir = tmp + "*.log";
+            Zipper zip = new Zipper();
+            zip.Compress(zipExe,baseDir,tmp,sourceDir);
         }
     }
 }
-
-
-
-/* string srcFilesrc = @"D:\BPS\DMS\Logs";
-         string destZipFilesrc = @"D:\BPS\DMS\Logs\Temp";
-
-
-         ZipFile.CreateFromDirectory(srcFilesrc, destZipFilesrc);
-
-
-         using (FileStream myzipfile = new FileStream("D:\\BPS\\DMS\\Logs\\output.zip", FileMode.Open))
-         {
-                 using (ZipArchive myzipfilearchive = new ZipArchive(myzipfile, ZipArchiveMode.Update))
-             {
-                 ZipArchiveEntry helpfile = myzipfilearchive.CreateEntry("");
-
-                 using (StreamWriter writer = new
-                    StreamWriter(helpfile.Open()))
-                 {
-
-                     writer.WriteLine("");
-                 }
-             }
-         } */

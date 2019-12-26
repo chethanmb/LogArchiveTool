@@ -10,16 +10,15 @@ using System.IO.Compression;
 namespace LogArchiveTool
 {
     class Zipper  //class Lib7z
-    {
+    {  
         
-        
-      public Zipper()
+      public void Compress(string zipexe, string basedir, string tmp, string source)
           {
-            string zipExe = @"C:\Program Files\7-Zip\7z.exe";
-            string baseDir = @"D:\BPS\DMS\Logs\";
-            string tmp = @"D:\BPS\DMS\Logs\Temp\";
-            string sourceDir = tmp + "*.log";
-            DirectoryInfo dir = new DirectoryInfo(baseDir);
+            string zipexe1 =zipexe;
+            string basedir1=basedir;
+            string tmp1=tmp;
+            string source1=source;
+            DirectoryInfo dir = new DirectoryInfo(basedir1);
             FileInfo[] files = dir.GetFiles("Archived.zip");
             foreach (FileInfo Tempfile in files)
             {
@@ -35,7 +34,7 @@ namespace LogArchiveTool
                 }
             }
 
-            DirectoryInfo di = new DirectoryInfo(tmp);
+            DirectoryInfo di = new DirectoryInfo(tmp1);
 
             try
             {
@@ -60,12 +59,12 @@ namespace LogArchiveTool
             Process process = new Process();
             ProcessStartInfo p = new ProcessStartInfo();
             p.WindowStyle = ProcessWindowStyle.Normal;
-            p.FileName = zipExe;
-            p.Arguments = "a -r -mx6 \"" + targetArchive + "\" \"" + sourceDir;
+            p.FileName = zipexe1;
+            p.Arguments = "a -r -mx6 \"" + targetArchive + "\" \"" + source1;
             Process x = Process.Start(p);
             x.WaitForExit();
 
-            Directory.Delete(tmp, true);
+            Directory.Delete(tmp1, true);
             Console.ReadKey();
        }
     }
