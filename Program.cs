@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace LogArchiveTool
 {
@@ -28,6 +30,24 @@ namespace LogArchiveTool
             {
                 Directory.CreateDirectory(dest);
             }
+
+            string pattern = @"\d{2}_\d{2}_\d{4}_\d{1,2}_\d{1,2}_\d{1,2}_\w[AM].zip{1}";
+            Regex rgx = new Regex(pattern);
+            
+
+      
+            var Files = Directory.EnumerateFiles(src);
+
+                foreach (string currentFile in Files)
+                {
+                    string fileName = currentFile.Substring(src.Length);
+                    if(rgx.IsMatch(fileName))
+                    {
+                    Console.WriteLine("Previously created archive exists", fileName);
+                    Console.ReadKey();
+                    return;
+                    }
+                }
             string ext = ".log";
             char[] separator = { '-' };
             //Int32 count = 3;

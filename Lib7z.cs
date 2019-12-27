@@ -22,22 +22,7 @@ namespace LogArchiveTool
             string source1=source;
             string arcName=arc;
             
-            string pattern = @"\d{2}_\d{2}_\d{4}_\d{1,2}_\d{1,2}_\d{1,2}_\w[AM].zip{1}";
-            Regex rgx = new Regex(pattern);
             
-
-        // DirectoryInfo dir = new DirectoryInfo(basedir1);
-         //   FileInfo[] files = dir.EnumerateFiles();
-            var Files = Directory.EnumerateFiles(basedir1);
-
-                foreach (string currentFile in Files)
-                {
-                    string fileName = currentFile.Substring(basedir1.Length);
-                    if(rgx.IsMatch(fileName))
-                    {
-                    Console.WriteLine("Previously created archive exists", fileName);
-                    }
-                }
           //  foreach (FileInfo Tempfile in files)
            {
                 //if (!Tempfile.Exists)
