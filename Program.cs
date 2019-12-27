@@ -21,7 +21,8 @@ namespace LogArchiveTool
 
             int curMonth = dt.Month;
             string src = @"D:\BPS\DMS\Logs";
-            
+            string archiveName = Path.Combine(src,d);
+
             string dest = @"D:\BPS\DMS\Logs\Temp\";
             if(!Directory.Exists(dest))
             {
@@ -78,7 +79,8 @@ namespace LogArchiveTool
             string tmp = @"D:\BPS\DMS\Logs\Temp\";
             string sourceDir = tmp + "*.log";
             Zipper zip = new Zipper();
-            zip.Compress(zipExe,baseDir,tmp,sourceDir,d);
+            zip.Compress(zipExe,baseDir,tmp,sourceDir,archiveName);
+            return;
         }
     }
 }
