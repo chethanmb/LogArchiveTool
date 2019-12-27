@@ -15,14 +15,18 @@ namespace LogArchiveTool
         {
             string path;
             DateTime dt = DateTime.Now;
-
-             
+        
             string d = dt.ToString().Replace('/', '_').Replace(' ', '_').Replace(':', '_');
-            //string d = datetime_tmp.Replace('/', '_').Replace(' ', '_').Replace(':', '_');
+           
 
             int curMonth = dt.Month;
-            string src = @"D:\BPS\DMS\Logs\";
+            string src = @"D:\BPS\DMS\Logs";
+            
             string dest = @"D:\BPS\DMS\Logs\Temp\";
+            if(!Directory.Exists(dest))
+            {
+                Directory.CreateDirectory(dest);
+            }
             string ext = ".log";
             char[] separator = { '-' };
             //Int32 count = 3;
@@ -74,7 +78,7 @@ namespace LogArchiveTool
             string tmp = @"D:\BPS\DMS\Logs\Temp\";
             string sourceDir = tmp + "*.log";
             Zipper zip = new Zipper();
-            zip.Compress(zipExe,baseDir,tmp,sourceDir);
+            zip.Compress(zipExe,baseDir,tmp,sourceDir,d);
         }
     }
 }

@@ -12,12 +12,13 @@ namespace LogArchiveTool
     class Zipper  //class Lib7z
     {  
         
-      public void Compress(string zipexe, string basedir, string tmp, string source)
+      public void Compress(string zipexe, string basedir, string tmp, string source, string d)
           {
             string zipexe1 =zipexe;
             string basedir1=basedir;
             string tmp1=tmp;
             string source1=source;
+            string arcName=d;
             DirectoryInfo dir = new DirectoryInfo(basedir1);
             FileInfo[] files = dir.GetFiles("Archived.zip");
             foreach (FileInfo Tempfile in files)
