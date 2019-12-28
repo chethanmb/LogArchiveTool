@@ -13,8 +13,21 @@ namespace LogArchiveTool
 {
     class Program
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         static void Main(string[] args)
         {
+            try
+            {
+                Logger.Info("Hello worldasdkamsdasmkdasmkdkmasmdasmdmasmdamsdmasmdasmdmasmdamdmasmdamsdkmasdkasmdkasmdkasdmaksdmaskdmaskdmasdkasmdkasmdkasdmaskdasmdkasmdaskdmaskdasmdkasmdaskdmaskdasmdaskdmasdkasmdkasdmaskdmaskdmasdkasmdkasdmaskdmaskdmaskdmasdkasmdkasmdaskdmaskdmaskdmasdkamsdaskdmaskdmaskdmasdkasmdkasmdkasdmakdmakdmaskdmaskdmasdkasmdkas");
+                
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Goodbye cruel world");
+            }
+
+
+
             string path;
             DateTime dt = DateTime.Now;
         
