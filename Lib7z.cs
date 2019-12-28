@@ -11,11 +11,12 @@ using System.Text.RegularExpressions;
 
 namespace LogArchiveTool
 {
-    class Zipper  //class Lib7z
-    {  
-        
-      public void Compress(string zipexe, string basedir, string tmp, string source, string arc)
-          {
+    class Zipper  
+    {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
+        public void Compress(string zipexe, string basedir, string tmp, string source, string arc)
+        {
             string zipexe1 =zipexe;
             string basedir1=basedir;
             string tmp1=tmp;
@@ -24,7 +25,7 @@ namespace LogArchiveTool
             
             
           //  foreach (FileInfo Tempfile in files)
-           {
+           //{
                 //if (!Tempfile.Exists)
                /* if (!rgx.IsMatch(Tempfile.ToString))
                 {
@@ -36,7 +37,7 @@ namespace LogArchiveTool
                     
                     //return;
                 }   */
-            }  
+           // }  
 
             DirectoryInfo di = new DirectoryInfo(tmp1);
 
@@ -58,22 +59,60 @@ namespace LogArchiveTool
             }
             finally { }
 
-            string targetArchive = @"D:\BPS\DMS\Logs\Archived.zip";
+            
 
-            Process process = new Process();
-            ProcessStartInfo p = new ProcessStartInfo();
-            p.WindowStyle = ProcessWindowStyle.Normal;
-            p.FileName = zipexe1;
-            p.Arguments = "a -tzip -r -mx3 \"" + arcName + "\" \"" + source1;
+            int eCode = CreateZip(zipexe1, arcName, source1);
+            Logger.Info("7-Zip exit code: {0}", eCode);
+            
+            Directory.Delete(tmp1, true);
+           //Console.ReadKey();
+      }
+
+        private int CreateZip(string zipexe1, string arcName, string source1)
+        {
+            
+            //Process process = new Process();
+            ProcessStartInfo p = new ProcessStartInfo
+            {
+                WindowStyle = ProcessWindowStyle.Normal,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                FileName = zipexe1,
+                Arguments = "a -tzip -r -bb3 -mx3 \"" + arcName + "\" \"" + source1
+            };
+            Logger.Info("Creating ZipArchive -> " + arcName + ".zip\n"); //+ "Source:" + source1);
             Process x = Process.Start(p);
+            string output = x.StandardOutput.ReadToEnd();
+            string formattedOutput = RemoveMsg(output);
+            Logger.Info(formattedOutput);
             x.WaitForExit();
-            int exitcode = x.ExitCode;
+            return (x.ExitCode);
+            
 
-            Console.WriteLine(exitcode);
-           Directory.Delete(tmp1, true);
-           Console.ReadKey();
-       }
+        }
+
+        private string RemoveMsg(string output)
+        {
+            int pos = output.IndexOf(":");
+            if(pos >= 0)
+            {
+                output = output.Remove(19, 55).Insert(0, "\n").Insert(20, "\n");
+                
+            }
+            return (output);
+        }
     }
 }
-    
 
+/*
+Logger.Info("Creating zip...Source Log File:" +source1+ "Zip Archive Name:" +arcName);
+//Process process = new Process();
+ProcessStartInfo p = new ProcessStartInfo();
+p.WindowStyle = ProcessWindowStyle.Normal;
+p.FileName = zipexe1;
+p.Arguments = "a -tzip -r -mx3 -mmt\"" + arcName + "\" \"" + source1;
+Process x = Process.Start(p);
+x.WaitForExit();
+int exitCode = x.ExitCode;
+return (exitCode);
+*/

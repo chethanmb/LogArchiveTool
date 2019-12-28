@@ -18,12 +18,12 @@ namespace LogArchiveTool
         {
             try
             {
-                Logger.Info("Hello worldasdkamsdasmkdasmkdkmasmdasmdmasmdamsdmasmdasmdmasmdamdmasmdamsdkmasdkasmdkasmdkasdmaksdmaskdmaskdmasdkasmdkasmdkasdmaskdasmdkasmdaskdmaskdasmdkasmdaskdmaskdasmdaskdmasdkasmdkasdmaskdmaskdmasdkasmdkasdmaskdmaskdmaskdmasdkasmdkasmdaskdmaskdmaskdmasdkamsdaskdmaskdmaskdmasdkasmdkasmdkasdmakdmakdmaskdmaskdmasdkasmdkas");
+                Logger.Info("XXXX");
                 
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Goodbye cruel world");
+                Logger.Error(ex);
             }
 
 
