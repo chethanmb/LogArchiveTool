@@ -58,7 +58,6 @@ namespace LogArchiveTool
                 Console.WriteLine("The process failed: {0}", e.ToString());
             }
             finally { }
-
             
 
             int eCode = CreateZip(zipexe1, arcName, source1);
@@ -78,7 +77,7 @@ namespace LogArchiveTool
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 FileName = zipexe1,
-                Arguments = "a -tzip -r -bb3 -mx3 \"" + arcName + "\" \"" + source1
+                Arguments = "a -tzip -r -bb3 -mx9 \"" + arcName + "\" \"" + source1
             };
             Logger.Info("Creating ZipArchive -> " + arcName + ".zip\n"); //+ "Source:" + source1);
             Process x = Process.Start(p);
