@@ -39,32 +39,16 @@ namespace LogArchiveTool
             string dest = @"D:\BPS\DMS\Logs\Temp\";
             int archDuration = Convert.ToInt32(ConfigHelper.GetValue("MonthCount"));
 
-            string pattern = @"\d{2}_\d{2}_\d{4}_\d{1,2}_\d{1,2}_\d{1,2}_\w[AM].zip{1}";
-                Regex rgx = new Regex(pattern);
+            if(!Directory.Exists(dest))
+                {
+                Directory.CreateDirectory(dest);
+                }
 
-                var Files = Directory.EnumerateFiles(src);
-
-                    foreach (string currentFile in Files)
-                    {
-                        string fileName = currentFile.Substring(src.Length);
-                        if(rgx.IsMatch(fileName))
-                        {
-                        Console.WriteLine("Previously created archive exists", fileName);
-                        Logger.Error("Previously created archive exists -> " + fileName);
-                        Console.ReadKey();
-                        return;
-                        }
-                    }
+            checkForOldZips oldzips= new checkForOldZips(src); //creates "zip" object and send "src"
+            
 
             if( am == 0) //Filter out files based on date/month embedded in the filename
             {
-                
-                if(!Directory.Exists(dest))
-                {
-                    Directory.CreateDirectory(dest);
-                }
-
-                
                 string ext = ".log";
                 char[] separator = { '-' };
                 //Int32 count = 3;
@@ -113,12 +97,17 @@ namespace LogArchiveTool
 
             else if (am == 1)
             {
-                Logger.Info("\n--------------------------Archiving files based on date/month embedded in the filenames------------------------\n");
-                
-                 if(!Directory.Exists(dest))
+ 
+                try
                     {
-                    Directory.CreateDirectory(dest);
+                        Logger.Info("\n--------------------------Archiving files based on date/month embedded in the filenames------------------------\n");
                     }
+                catch (Exception ex)
+                    {
+                        Logger.Error(ex);
+                    }
+
+               
 
                 var logFiles = Directory.EnumerateFiles(src);
             
@@ -145,8 +134,15 @@ namespace LogArchiveTool
             }
             else
             {
-                Console.WriteLine("\nFatal Error: Check for ArchivalMethod and other keys in .config file\n");
-                Logger.Info("\n------------------------Fatal Error: Check for ArchivalMethod and other keys in .config file----------------------\n");
+                try
+                    {
+                        Logger.Info("\n------------------------Fatal Error: Check for ArchivalMethod and other keys in .config file----------------------\n");
+                    }
+                catch (Exception ex)
+                    {
+                        Logger.Error(ex);
+                    }
+
                 return;
             }
             //Console.ReadLine();
@@ -154,7 +150,7 @@ namespace LogArchiveTool
             string baseDir = @"D:\BPS\DMS\Logs\";
             string tmp = @"D:\BPS\DMS\Logs\Temp\";
             string sourceDir = tmp + "*.log";
-            Zipper zip = new Zipper();
+            
             zip.Compress(zipExe,baseDir,tmp,sourceDir,archiveName);
             return;
         }
