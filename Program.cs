@@ -14,6 +14,8 @@ namespace LogArchiveTool
     class Program
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        public const string NEW_LINE = "\r\n";
+
         static void Main(string[] args)
         {
             try
@@ -39,14 +41,20 @@ namespace LogArchiveTool
             string dest = @"D:\BPS\DMS\Logs\Temp\";
             int archDuration = Convert.ToInt32(ConfigHelper.GetValue("MonthCount"));
 
-            if(!Directory.Exists(dest))
+            if (!Directory.Exists(dest))
                 {
                 Directory.CreateDirectory(dest);
                 }
 
-            checkForOldZips oldzips= new checkForOldZips(src); //creates "zip" object and send "src"
             
-
+            Search s = new Search();
+            int status = s.checkForOldZips(src);
+            if (status == 1)
+                {
+                    return;
+                }
+            
+            
             if( am == 0) //Filter out files based on date/month embedded in the filename
             {
                 string ext = ".log";
@@ -150,9 +158,29 @@ namespace LogArchiveTool
             string baseDir = @"D:\BPS\DMS\Logs\";
             string tmp = @"D:\BPS\DMS\Logs\Temp\";
             string sourceDir = tmp + "*.log";
-            
+
+            Zipper zip = new Zipper(); 
             zip.Compress(zipExe,baseDir,tmp,sourceDir,archiveName);
+            
             return;
         }
     }
 }
+
+
+// public static int miNoOfZipFileCreated = 0;
+
+
+//Process EncryptProcess = Process.Start(gpgProcess);
+//EncryptProcess.WaitForExit();
+//                }
+
+//                miNoOfDocumentsRepatriated = miNoOfDocumentsRepatriated + 1;
+//            }
+//            catch (Exception Ex)
+//            {
+//                miNoOfDocumentsFailed = miNoOfDocumentsFailed + 1;
+
+//                Infrastructure.LogError(DmsApplicationName.Reporting, DmsModuleName.Reporting_Load, DmsLogCategory.Reporting, Ex);
+
+//            }

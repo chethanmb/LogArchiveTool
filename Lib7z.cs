@@ -13,7 +13,7 @@ namespace LogArchiveTool
 {
     class Zipper  
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        public static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
         public void Compress(string zipexe, string basedir, string tmp, string source, string arc)
         {
@@ -65,7 +65,7 @@ namespace LogArchiveTool
             
             Directory.Delete(tmp1, true);
            //Console.ReadKey();
-      }
+        }
 
         private int CreateZip(string zipexe1, string arcName, string source1)
         {
@@ -106,16 +106,15 @@ namespace LogArchiveTool
     }
    
 
-    public class checkForOldZips : Zipper
+    class Search : Zipper
+    {      
+        public int checkForOldZips(string source)
         {
-        
-        public checkForOldZips(string source)
-
-        {
-            this.src = source;
-            
+            string src = source;
+            int status = 0;
             string pattern = @"\d{2}_\d{2}_\d{4}_\d{1,2}_\d{1,2}_\d{1,2}_\w[AM].zip{1}";
             Regex rgx = new Regex(pattern);
+
 
             var Files = Directory.EnumerateFiles(src);
 
@@ -124,13 +123,14 @@ namespace LogArchiveTool
                     string fileName = currentFile.Substring(src.Length);
                     if(rgx.IsMatch(fileName))
                     {
-                    Console.WriteLine("Previously created archive exists", fileName);
-                    Logger.Error("Previously created archive exists -> " + fileName);
-                    Console.ReadKey();
-                    return;
+                        status = 1;
+                        Console.WriteLine("Previously created archive exists", fileName);
+                        Logger.Error("Previously created archive exists -> " + fileName);
+                       
                     }
+                   
                 }
-                
+             return(status);
         }
     }
 }
