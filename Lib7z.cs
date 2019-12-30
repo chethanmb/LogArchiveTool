@@ -100,8 +100,42 @@ namespace LogArchiveTool
             }
             return (output);
         }
+
+        
+        
+    }
+   
+
+    public class checkForOldZips : Zipper
+        {
+        
+        public checkForOldZips(string source)
+
+        {
+            this.src = source;
+            
+            string pattern = @"\d{2}_\d{2}_\d{4}_\d{1,2}_\d{1,2}_\d{1,2}_\w[AM].zip{1}";
+            Regex rgx = new Regex(pattern);
+
+            var Files = Directory.EnumerateFiles(src);
+
+                foreach (string currentFile in Files)
+                {
+                    string fileName = currentFile.Substring(src.Length);
+                    if(rgx.IsMatch(fileName))
+                    {
+                    Console.WriteLine("Previously created archive exists", fileName);
+                    Logger.Error("Previously created archive exists -> " + fileName);
+                    Console.ReadKey();
+                    return;
+                    }
+                }
+                
+        }
     }
 }
+            // return(0);
+
 
 /*
 Logger.Info("Creating zip...Source Log File:" +source1+ "Zip Archive Name:" +arcName);
