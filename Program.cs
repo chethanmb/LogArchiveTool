@@ -63,11 +63,13 @@ namespace LogArchiveTool
 
                 message = message + "Completion Time of the Application: " + DateTime.Now.ToString() + Zipper.NEW_LINE + Zipper.NEW_LINE;
 
-                message = message + "Zip Archival Process Status:" + Zipper.NEW_LINE;
+                message = message +  Zipper.NEW_LINE + "Zip Archival Process Status" + Zipper.NEW_LINE;
 
                 message = message + "-----------------------------------";
 
                 message = message + zipOutMsg;
+
+                message = message +  Zipper.NEW_LINE + Zipper.NEW_LINE + "Thanks & Regards," + Zipper.NEW_LINE + "Chethan";
 
                 Zipper.EmailMessage = Zipper.EmailMessage.Append(message);
 
