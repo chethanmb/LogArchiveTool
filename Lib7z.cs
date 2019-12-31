@@ -23,21 +23,21 @@ namespace LogArchiveTool
         public static int NoOfLogFilesFailedWhileZipping = 0;
 
         public static StringBuilder EmailMessage = new StringBuilder();
-        public string formattedOutput;
-        public const string src = @"D:\BPS\DMS\Logs";
-        public const string dest = @"D:\BPS\DMS\Logs\Temp\";
-        public const string zipExe = @"C:\Program Files\7-Zip\7z.exe";
+        public string formattedOutput = String.Empty;
+        public string src = ConfigHelper.GetValue("SourceFolder");
+        public string dest = ConfigHelper.GetValue("DestinationFolder");
+        public string zipExe = ConfigHelper.GetValue("7ZipExe");
 
         public int InitSteps()
         {
 
             int am = Convert.ToInt32(ConfigHelper.GetValue("ArchivalMethod")); // 0 or 1
-            string path;
-
+            int archDuration = Convert.ToInt32(ConfigHelper.GetValue("MonthCount"));
+            
             int curMonth = DateTime.Now.Month;
             int curYear = DateTime.Now.Year;
-
-            int archDuration = Convert.ToInt32(ConfigHelper.GetValue("MonthCount"));
+            string path = String.Empty;
+            string ext = ".log";
 
             int status = checkForOldZips(src);
             if (status == 1)
@@ -67,12 +67,8 @@ namespace LogArchiveTool
             //{ }
 
 
-
-
-
             if (am == 0) //Filter out files based on date/month embedded in the filename
-            {
-                string ext = ".log";
+            {                
                 char[] separator = { '-' };
                 //Int32 count = 3;
                 DirectoryInfo dir = new DirectoryInfo(src);
@@ -134,31 +130,35 @@ namespace LogArchiveTool
                     Logger.Error(ex);
                 }
 
-
-
+                
                 var logFiles = Directory.EnumerateFiles(src);
 
                 foreach (string currentFile in logFiles)
-                {
-                    int fileMonth = Int32.Parse(currentFile.Substring(28, 2));
-                    int fileYear = Int32.Parse(currentFile.Substring(23, 4));
-                    string fileName = currentFile.Substring(src.Length + 1);
-                    int monthDiff = curMonth - fileMonth;
-                    int yearDiff = curYear - fileYear;
-                    if (yearDiff >= 0 && monthDiff >= archDuration)
+                {   
+                    
+                    if (currentFile.Contains(ext))
                     {
-                        File.Move(currentFile, Path.Combine(dest, fileName));
-                        NoOfLogFilesToBeZipped += 1;
+                        int fileMonth = Int32.Parse(currentFile.Substring(28, 2));
+                        int fileYear = Int32.Parse(currentFile.Substring(23, 4));
+                        string fileName = currentFile.Substring(src.Length);
+                        int monthDiff = curMonth - fileMonth;
+                        int yearDiff = curYear - fileYear;
+                        if (yearDiff >= 0 && monthDiff >= archDuration)
+                        {
+                            File.Move(currentFile, Path.Combine(dest, fileName));
+                            NoOfLogFilesToBeZipped += 1;
+                        }
+                        else if (fileYear < curYear)
+                        {
+                            File.Move(currentFile, Path.Combine(dest, fileName));
+                            NoOfLogFilesToBeZipped += 1;
+                        }
+                        else
+                        {
+                            Logger.Error("Invalid Year/Month found in the logfile name -> " + currentFile);
+                        }
                     }
-                    else if (fileYear < curYear)
-                    {
-                        File.Move(currentFile, Path.Combine(dest, fileName));
-                        NoOfLogFilesToBeZipped += 1;
-                    }
-                    else
-                    {
-                        Logger.Error("Invalid Year/Month found in the logfile name -> " + currentFile);
-                    }
+                    
                 }
             }
             else
@@ -189,40 +189,49 @@ namespace LogArchiveTool
 
 
         public string Zip()
-        {
-            string d = DateTime.Now.ToString().Replace('/', '_').Replace(' ', '_').Replace(':', '_');
-            string archiveName = Path.Combine(src, d);
-            string zipSource = dest + "*.log";
-            //Process process = new Process();
-            try
+        {   
+            if (Directory.GetFiles(dest).Length != 0)
             {
-                ProcessStartInfo p = new ProcessStartInfo
-                {
-                    WindowStyle = ProcessWindowStyle.Normal,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    FileName = zipExe,
-                    Arguments = "a -tzip -r -bb3 -mx5 \"" + archiveName + "\" \"" + zipSource
-                };
-                Logger.Info("Creating ZipArchive -> " + archiveName + ".zip\n"); //+ "Source:" + source1);
-                NoOfLogFilesZipped += 1;
-                Process x = Process.Start(p);
-                string output = x.StandardOutput.ReadToEnd();
-                formattedOutput = RemoveMsg(output);
-                Logger.Info(formattedOutput);
-                
-                x.WaitForExit();
-                //Console.ReadKey();
-                
-            }
-            catch (Exception Ex)
-            {
-                Console.WriteLine(Ex.Message);
-                Console.ReadLine();
-                NoOfLogFilesFailedWhileZipping += 1;
-            }
-            //return (x.ExitCode);
+                int nThreads = Convert.ToInt32(ConfigHelper.GetValue("nCPUThrds"));
+                int CmprssnLvl = Convert.ToInt32(ConfigHelper.GetValue("CmprssnLvl"));
 
+                string d = DateTime.Now.ToString().Replace('/', '_').Replace(' ', '_').Replace(':', '_');
+                string archiveName = Path.Combine(src, d);
+                string zipSource = dest + "*.log";
+                //Process process = new Process();
+                try
+                {
+                    ProcessStartInfo p = new ProcessStartInfo
+                    {
+                        WindowStyle = ProcessWindowStyle.Normal,
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        FileName = zipExe,
+                        Arguments = "a -tzip -r -bb3 -mmt\"" + CmprssnLvl + "\" -mx\"" + nThreads + "\" \"" + archiveName + "\" \"" + zipSource
+                    };
+                    Logger.Info("Creating ZipArchive -> " + archiveName + ".zip\n"); //+ "Source:" + source1);
+                    NoOfLogFilesZipped += 1;
+                    Process x = Process.Start(p);
+                    string output = x.StandardOutput.ReadToEnd();
+                    formattedOutput = RemoveMsg(output);
+                    Logger.Info(formattedOutput);
+                
+                    x.WaitForExit();
+                    //Console.ReadKey();
+                
+                }
+                catch (Exception Ex)
+                {
+                    Console.WriteLine(Ex.Message);
+                    Console.ReadLine();
+                    NoOfLogFilesFailedWhileZipping += 1;
+                }
+                //return (x.ExitCode);
+            }
+            else
+            {
+                formattedOutput = "0 Files were added to the zip";
+            }
             return (formattedOutput);
         }
 
@@ -253,13 +262,14 @@ namespace LogArchiveTool
 
         private string RemoveMsg(string output)
         {
-            int pos = output.IndexOf(":");
+            
+            int pos = output.IndexOf("7");
             if (pos >= 0)
             {
-                output = output.Remove(19, 55).Insert(0, "\n").Insert(20, "\n");
+               output = output.Remove(0, 74);
 
-            }
-            return (output);
+            } 
+            return (output); 
         }
 
     }

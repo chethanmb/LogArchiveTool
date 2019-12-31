@@ -14,9 +14,12 @@ namespace LogArchiveTool
     class Program
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        private static string source = @"D:\BPS\DMS\Logs";
+        private static string source = ConfigHelper.GetValue("SourceFolder");
         static void Main(string[] args)
         {
+
+           
+
 
             try
             {
@@ -48,6 +51,7 @@ namespace LogArchiveTool
                     return;
                 }
                 
+                
                 string zipOutMsg = compress.Zip();
 
                 #region App_Summary_For_Email
@@ -65,7 +69,7 @@ namespace LogArchiveTool
 
                 message = message +  Zipper.NEW_LINE + "Zip Archival Process Status" + Zipper.NEW_LINE;
 
-                message = message + "-----------------------------------";
+                message = message + "-----------------------------------" + Zipper.NEW_LINE;
 
                 message = message + zipOutMsg;
 
@@ -75,10 +79,14 @@ namespace LogArchiveTool
 
                 message = ConfigHelper.GetValue("HostName") + " - Log File Archival Tool Execution Summary - Date: " + DateTime.Now.ToString();
 
-                //if (Zipper.miNoOfDocumentsFailed > 0)
-                //{
+                
+                if (Directory.Exists(ConfigHelper.GetValue("DestinationFolder")))
+                {
+                    Directory.Delete(ConfigHelper.GetValue("DestinationFolder"), true);
+                }
+                
                 EmailUtil.SendEmailToAdmin(message, Zipper.EmailMessage.ToString(), null);
-                //}
+                
                 #endregion App_Summary_For_Email
 
             }
