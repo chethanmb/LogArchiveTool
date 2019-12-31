@@ -14,145 +14,80 @@ namespace LogArchiveTool
     class Program
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private static string source = @"D:\BPS\DMS\Logs";
         static void Main(string[] args)
         {
+
             try
             {
-                Logger.Info("XXXX");
-                
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex);
-            }
+                #region Email_Start_Message
+                string message = string.Empty;
+                //message = Zipper.NEW_LINE + "LOGS FOR LOGFILEARCHIVE TOOL" + Zipper.NEW_LINE;
+                //Zipper.EmailMessage = Zipper.EmailMessage.Append(message);
+                //message = "--------------------------------" + Zipper.NEW_LINE;
+                //Zipper.EmailMessage = Zipper.EmailMessage.Append(message);
+                #endregion Email_Start_Message
 
-
-            int am = Convert.ToInt32(ConfigHelper.GetValue("ArchivalMethod")); // 0 or 1
-
-            string path;
-            DateTime dt = DateTime.Now;       
-            string d = dt.ToString().Replace('/', '_').Replace(' ', '_').Replace(':', '_');         
-            int curMonth = dt.Month;
-            int curYear = dt.Year;
-            string src = @"D:\BPS\DMS\Logs";
-            string archiveName = Path.Combine(src,d);
-            string dest = @"D:\BPS\DMS\Logs\Temp\";
-            int archDuration = Convert.ToInt32(ConfigHelper.GetValue("MonthCount"));
-
-            if(!Directory.Exists(dest))
+                #region Packaging
+                if (Directory.Exists(ConfigHelper.GetValue("DestinationFolder")))
                 {
-                Directory.CreateDirectory(dest);
+                    Directory.Delete(ConfigHelper.GetValue("DestinationFolder"), true);
                 }
 
-            checkForOldZips oldzips= new checkForOldZips(src); //creates "zip" object and send "src"
-            
+                Directory.CreateDirectory(ConfigHelper.GetValue("DestinationFolder"));
+                
+                //Zipper loZipper = new Zipper();
+                //loZipper.CompressFile();              
+                #endregion Packaging
+                
+                Zipper compress = new Zipper();
 
-            if( am == 0) //Filter out files based on date/month embedded in the filename
-            {
-                string ext = ".log";
-                char[] separator = { '-' };
-                //Int32 count = 3;
-                DirectoryInfo dir = new DirectoryInfo(src);
-                FileInfo[] files = dir.GetFiles();
-                foreach (FileInfo Tempfile in files)
+                int rtn = compress.InitSteps();
+                if (rtn == 1)
                 {
-                    if (Tempfile.Extension == ext)
-                    {
+                    return;
+                }
+                
+                string zipOutMsg = compress.Zip();
 
-                        DateTime dtCreationTime = Tempfile.CreationTime;
-                        int crtMonth = dtCreationTime.Month;
-                        int diff = curMonth - crtMonth;
-                        
-                        if (diff >= archDuration)
-                        {
-                            {
-                                string srcFileName = Tempfile.Name; //only the filename
-                                string srcFileName_path = Tempfile.FullName; //filename along with the path
-                                string destFileName = Path.Combine(dest, srcFileName);// gives filename with full path to which src file is moved
-                                try
-                                {
-                                    File.Move(srcFileName_path, destFileName);
+                #region App_Summary_For_Email
+                message = string.Empty;
 
-                                    if (File.Exists(destFileName))
-                                    {
-                                        Console.WriteLine("\nFile moved to destination: " + srcFileName_path);
-                                    }
-                                    else
-                                    {
-                                        Console.WriteLine("\nError: Failed to move following file to the destination" + srcFileName_path);
-                                    }
-                                }
-                                catch (IOException e)
-                                {
-                                    Console.WriteLine($"ERROR:\t{e.Message}");
-                                    Console.WriteLine(destFileName);
-                                }
-                            }
+                message = "SUMMARY OF LOGFILEARCHIVAL TOOL" + Zipper.NEW_LINE;
 
-                        }
-                    }
+                message = message + "----------------------------------------------------" + Zipper.NEW_LINE;
 
-                } 
-            } //Filter ends here
+                message = message + "Number of Log Files To Be Zipped: " + Zipper.NoOfLogFilesToBeZipped.ToString() + Zipper.NEW_LINE;
 
-            else if (am == 1)
-            {
- 
-                try
-                    {
-                        Logger.Info("\n--------------------------Archiving files based on date/month embedded in the filenames------------------------\n");
-                    }
-                catch (Exception ex)
-                    {
-                        Logger.Error(ex);
-                    }
+                message = message + "Number of Log Files Not Considered: " + Zipper.NoOfLogFilesNotConsidered.ToString() + Zipper.NEW_LINE + Zipper.NEW_LINE;
 
-               
+                message = message + "Completion Time of the Application: " + DateTime.Now.ToString() + Zipper.NEW_LINE + Zipper.NEW_LINE;
 
-                var logFiles = Directory.EnumerateFiles(src);
-            
-                foreach (string currentFile in logFiles)
-                {
-                    int fileMonth = Int32.Parse(currentFile.Substring(28, 2));
-                    int fileYear = Int32.Parse(currentFile.Substring(23, 4));               
-                    string fileName = currentFile.Substring(src.Length + 1);
-                    int monthDiff = curMonth - fileMonth;
-                    int yearDiff = curYear - fileYear;
-                    if ( yearDiff >= 0 && monthDiff >= archDuration )   
-                    {
-                        File.Move(currentFile, Path.Combine(dest, fileName));             
-				    }
-                    else if ( fileYear < curYear )
-                    {
-                        File.Move(currentFile, Path.Combine(dest, fileName));  
-                    }
-                    else
-                    {
-                        Logger.Error("Invalid Year/Month found in the logfile name -> " + currentFile);
-                    }
-			    }
+                message = message + "Zip Archival Process Status:" + Zipper.NEW_LINE;
+
+                message = message + "-----------------------------------";
+
+                message = message + zipOutMsg;
+
+                Zipper.EmailMessage = Zipper.EmailMessage.Append(message);
+
+                message = ConfigHelper.GetValue("HostName") + " - Log File Archival Tool Execution Summary - Date: " + DateTime.Now.ToString();
+
+                //if (Zipper.miNoOfDocumentsFailed > 0)
+                //{
+                EmailUtil.SendEmailToAdmin(message, Zipper.EmailMessage.ToString(), null);
+                //}
+                #endregion App_Summary_For_Email
+
             }
-            else
+            catch (Exception Ex)
             {
-                try
-                    {
-                        Logger.Info("\n------------------------Fatal Error: Check for ArchivalMethod and other keys in .config file----------------------\n");
-                    }
-                catch (Exception ex)
-                    {
-                        Logger.Error(ex);
-                    }
+                Console.WriteLine(Ex.Message);
+                Console.ReadKey();
+                Logger.Error(Ex);
 
-                return;
             }
-            //Console.ReadLine();
-            string zipExe = @"C:\Program Files\7-Zip\7z.exe";
-            string baseDir = @"D:\BPS\DMS\Logs\";
-            string tmp = @"D:\BPS\DMS\Logs\Temp\";
-            string sourceDir = tmp + "*.log";
             
-            zip.Compress(zipExe,baseDir,tmp,sourceDir,archiveName);
-            return;
         }
     }
 }
