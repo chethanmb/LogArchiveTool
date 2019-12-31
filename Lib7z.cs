@@ -16,11 +16,19 @@ namespace LogArchiveTool
         public static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         public int status;
         public const string NEW_LINE = "\r\n";
+        public static int NoOfLogFilesToBeZipped = 0;
+        public static int NoOfLogFilesNotConsidered = 0;
+       // public static int NoOfLogFilesMovedToTempDir = 0;
+        public static int NoOfLogFilesZipped = 0;
+        public static int NoOfLogFilesFailedWhileZipping = 0;
+
+        public static StringBuilder EmailMessage = new StringBuilder();
+        public string formattedOutput;
         public const string src = @"D:\BPS\DMS\Logs";
         public const string dest = @"D:\BPS\DMS\Logs\Temp\";
         public const string zipExe = @"C:\Program Files\7-Zip\7z.exe";
 
-        public void InitSteps()
+        public int InitSteps()
         {
 
             int am = Convert.ToInt32(ConfigHelper.GetValue("ArchivalMethod")); // 0 or 1
@@ -34,28 +42,29 @@ namespace LogArchiveTool
             int status = checkForOldZips(src);
             if (status == 1)
             {
-                return;
+                return 1;
             }
+            
 
-            DirectoryInfo di = new DirectoryInfo(dest);
-            try
-            {
-                if (di.Exists)
-                {
-                    Console.WriteLine("That path exists already.");
-                }
-                else
-                {
-                    di.Create();
-                    Console.WriteLine("\"Temp\" directory was created successfully.");
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("The process failed: {0}", e.ToString());
-            }
-            finally
-            { }
+            //DirectoryInfo di = new DirectoryInfo(dest);
+            //try
+            //{
+            //    if (di.Exists)
+            //    {
+            //        Console.WriteLine("That path exists already.");
+            //    }
+            //    else
+            //    {
+            //        di.Create();
+            //        Console.WriteLine("\"Temp\" directory was created successfully.");
+            //    }
+            //}
+            //catch (Exception e)
+            //{
+            //    Console.WriteLine("The process failed: {0}", e.ToString());
+            //}
+            //finally
+            //{ }
 
 
 
@@ -86,10 +95,12 @@ namespace LogArchiveTool
                                 try
                                 {
                                     File.Move(srcFileName_path, destFileName);
+                                    NoOfLogFilesToBeZipped += 1;
 
                                     if (File.Exists(destFileName))
                                     {
                                         Console.WriteLine("\nFile moved to destination: " + srcFileName_path);
+                                        
                                     }
                                     else
                                     {
@@ -101,6 +112,8 @@ namespace LogArchiveTool
                                     Console.WriteLine($"ERROR:\t{e.Message}");
                                     Console.WriteLine(destFileName);
                                 }
+                                NoOfLogFilesNotConsidered += 1;
+
                             }
 
                         }
@@ -135,10 +148,12 @@ namespace LogArchiveTool
                     if (yearDiff >= 0 && monthDiff >= archDuration)
                     {
                         File.Move(currentFile, Path.Combine(dest, fileName));
+                        NoOfLogFilesToBeZipped += 1;
                     }
                     else if (fileYear < curYear)
                     {
                         File.Move(currentFile, Path.Combine(dest, fileName));
+                        NoOfLogFilesToBeZipped += 1;
                     }
                     else
                     {
@@ -158,6 +173,7 @@ namespace LogArchiveTool
                 }
 
             }
+            return 0;
         }
 
         ////Console.ReadLine();
@@ -172,7 +188,7 @@ namespace LogArchiveTool
         //return;
 
 
-        public void zip()
+        public string Zip()
         {
             string d = DateTime.Now.ToString().Replace('/', '_').Replace(' ', '_').Replace(':', '_');
             string archiveName = Path.Combine(src, d);
@@ -186,37 +202,38 @@ namespace LogArchiveTool
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     FileName = zipExe,
-                    Arguments = "a -tzip -r -bb3 -mx9 \"" + archiveName + "\" \"" + zipSource
+                    Arguments = "a -tzip -r -bb3 -mx5 \"" + archiveName + "\" \"" + zipSource
                 };
                 Logger.Info("Creating ZipArchive -> " + archiveName + ".zip\n"); //+ "Source:" + source1);
+                NoOfLogFilesZipped += 1;
                 Process x = Process.Start(p);
                 string output = x.StandardOutput.ReadToEnd();
-                string formattedOutput = RemoveMsg(output);
+                formattedOutput = RemoveMsg(output);
                 Logger.Info(formattedOutput);
+                
                 x.WaitForExit();
-                Console.ReadKey();
+                //Console.ReadKey();
+                
             }
             catch (Exception Ex)
             {
                 Console.WriteLine(Ex.Message);
                 Console.ReadLine();
+                NoOfLogFilesFailedWhileZipping += 1;
             }
             //return (x.ExitCode);
 
-
+            return (formattedOutput);
         }
 
 
 
-
-
-        public int checkForOldZips(string source)
+        public int checkForOldZips(string src)
         {
-            string src = source;
+            //string src = source;
             int status = 0;
-            string pattern = @"\d{2}_\d{2}_\d{4}_\d{1,2}_\d{1,2}_\d{1,2}_\w[AM].zip{1}";
+            string pattern = @"^.*.zip";  //@"\d{2}_\d{2}_\d{4}_\d{1,2}_\d{1,2}_\d{1,2}_\w[AM].zip{1}"
             Regex rgx = new Regex(pattern);
-
 
             var Files = Directory.EnumerateFiles(src);
 
@@ -228,12 +245,11 @@ namespace LogArchiveTool
                     status = 1;
                     Console.WriteLine("Previously created archive exists", fileName);
                     Logger.Error("Previously created archive exists -> " + fileName);
-
                 }
-
             }
             return (status);
         }
+
 
         private string RemoveMsg(string output)
         {
