@@ -15,7 +15,7 @@ namespace LogArchiveTool
     {
         public static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         public int status;
-        public const string NEW_LINE = "\r\n";
+        
         public static int NoOfLogFilesToBeZipped = 0;
         public static int NoOfLogFilesNotConsidered = 0;
        // public static int NoOfLogFilesMovedToTempDir = 0;
@@ -64,7 +64,7 @@ namespace LogArchiveTool
 
             if (am == 0) //Filter out files based on date/month embedded in the filename
             {                
-                Logger.Info("\n--------------------------Archiving files based on log file creation time------------------------\n");
+                Logger.Info("\n--------------------------Archiving files based on log file creation date------------------------\n");
                 DirectoryInfo dir = new DirectoryInfo(src);
                 FileInfo[] files = dir.GetFiles();
 
@@ -99,7 +99,7 @@ namespace LogArchiveTool
             else if (am == 1)
             {
 
-                Logger.Info("\n--------------------------Archiving files based on day,month & year embedded in the log filenames------------------------\n");
+                Logger.Info("\n--------------------------Archiving files based on date embedded in the log filename------------------------\n");
                
                 
                 var logFiles = Directory.EnumerateFiles(src);
@@ -120,6 +120,10 @@ namespace LogArchiveTool
                                 {
                                     File.Move(currentFile, Path.Combine(dest, fileName));
                                     NoOfLogFilesToBeZipped += 1;
+                                }
+                            else
+                                {
+                                    NoOfLogFilesNotConsidered += 1;
                                 }
                         }
                         catch(Exception Ex)
@@ -217,10 +221,9 @@ namespace LogArchiveTool
                 string fileName = currentFile.Substring(src.Length);
                 if (rgx.IsMatch(fileName))
                 {
-                    status = 1;
-                    Console.WriteLine("Previously created archive exists", fileName);
-                    Logger.Error("Previously created archive exists -> " + Path.Combine(src, fileName) + "\tKindly move the file:" + fileName);
-                    Logger.Info("Existing the Program...\n");
+                    status = 1;                   
+                    Logger.Error("Old archive found in -> " + Path.Combine(src, fileName) + "\tKindly move the file:" + fileName);
+                    Logger.Info("Exiting the Program...\n");
                 }
             }
             return (status);
