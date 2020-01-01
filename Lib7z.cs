@@ -32,7 +32,7 @@ namespace LogArchiveTool
         {
 
             int am = Convert.ToInt32(ConfigHelper.GetValue("ArchivalMethod")); // 0 or 1
-            int archDuration = Convert.ToInt32(ConfigHelper.GetValue("MonthCount"));
+            int archDuration = Convert.ToInt32(ConfigHelper.GetValue("NoOfDays"));
             
             int curMonth = DateTime.Now.Month;
             int curYear = DateTime.Now.Year;
@@ -121,15 +121,8 @@ namespace LogArchiveTool
             else if (am == 1)
             {
 
-                try
-                {
-                    Logger.Info("\n--------------------------Archiving files based on date/month embedded in the filenames------------------------\n");
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error(ex);
-                }
-
+                Logger.Info("\n--------------------------Archiving files based on date/month embedded in the filenames------------------------\n");
+               
                 
                 var logFiles = Directory.EnumerateFiles(src);
 
@@ -138,39 +131,33 @@ namespace LogArchiveTool
                     
                     if (currentFile.Contains(ext))
                     {
-                        int fileMonth = Int32.Parse(currentFile.Substring(28, 2));
-                        int fileYear = Int32.Parse(currentFile.Substring(23, 4));
-                        string fileName = currentFile.Substring(src.Length);
-                        int monthDiff = curMonth - fileMonth;
-                        int yearDiff = curYear - fileYear;
-                        if (yearDiff >= 0 && monthDiff >= archDuration)
+                        try
                         {
-                            File.Move(currentFile, Path.Combine(dest, fileName));
-                            NoOfLogFilesToBeZipped += 1;
+                        
+                            string fileDate = currentFile.Substring(23, 10).Replace( '-', ',');
+                            string fileName = currentFile.Substring(src.Length);
+                            DateTime date1 = DateTime.Parse(fileDate);   
+                            TimeSpan diff = DateTime.Now.Subtract(date1);
+                            if (diff.TotalDays > archDuration)
+                                {
+                                    File.Move(currentFile, Path.Combine(dest, fileName));
+                                    NoOfLogFilesToBeZipped += 1;
+                                }
                         }
-                        else if (fileYear < curYear)
+                        catch(Exception Ex)
                         {
-                            File.Move(currentFile, Path.Combine(dest, fileName));
-                            NoOfLogFilesToBeZipped += 1;
+                            Console.WriteLine(Ex.Message);
                         }
-                        else
-                        {
-                            Logger.Error("Invalid Year/Month found in the logfile name -> " + currentFile);
-                        }
-                    }
+                       
+                    }  
                     
                 }
             }
             else
             {
-                try
-                {
+
                     Logger.Info("\n------------------------Fatal Error: Check for ArchivalMethod and other keys in .config file----------------------\n");
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error(ex);
-                }
+               
 
             }
             return 0;

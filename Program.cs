@@ -18,7 +18,7 @@ namespace LogArchiveTool
         static void Main(string[] args)
         {
 
-           
+           string StartTime = DateTime.Now.ToString();
 
 
             try
@@ -60,6 +60,8 @@ namespace LogArchiveTool
                 message = "SUMMARY OF LOGFILEARCHIVAL TOOL" + Zipper.NEW_LINE;
 
                 message = message + "----------------------------------------------------" + Zipper.NEW_LINE;
+
+                message = message + "Starting Time of the Application: " + StartTime + Zipper.NEW_LINE + Zipper.NEW_LINE;
 
                 message = message + "Number of Log Files To Be Zipped: " + Zipper.NoOfLogFilesToBeZipped.ToString() + Zipper.NEW_LINE;
 
