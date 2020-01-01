@@ -39,11 +39,6 @@ namespace LogArchiveTool
             string path = String.Empty;
             string ext = ".log";
 
-            int status = checkForOldZips(src);
-            if (status == 1)
-            {
-                return 1;
-            }
             
 
             //DirectoryInfo di = new DirectoryInfo(dest);
@@ -69,59 +64,38 @@ namespace LogArchiveTool
 
             if (am == 0) //Filter out files based on date/month embedded in the filename
             {                
-                char[] separator = { '-' };
-                //Int32 count = 3;
+                Logger.Info("\n--------------------------Archiving files based on log file creation time------------------------\n");
                 DirectoryInfo dir = new DirectoryInfo(src);
                 FileInfo[] files = dir.GetFiles();
+
                 foreach (FileInfo Tempfile in files)
                 {
                     if (Tempfile.Extension == ext)
                     {
-
-                        DateTime dtCreationTime = Tempfile.CreationTime;
-                        int crtMonth = dtCreationTime.Month;
-                        int diff = curMonth - crtMonth;
-
-                        if (diff >= archDuration)
+                        try
                         {
-                            {
-                                string srcFileName = Tempfile.Name; //only the filename
-                                string srcFileName_path = Tempfile.FullName; //filename along with the path
-                                string destFileName = Path.Combine(dest, srcFileName);// gives filename with full path to which src file is moved
-                                try
-                                {
-                                    File.Move(srcFileName_path, destFileName);
-                                    NoOfLogFilesToBeZipped += 1;
-
-                                    if (File.Exists(destFileName))
+                            DateTime dtCreationTime = Tempfile.CreationTime;               
+                            TimeSpan diff = DateTime.Now.Subtract(dtCreationTime);
+                            
+                                if (diff.TotalDays > archDuration) //Move all files except the last <archDuration> days
                                     {
-                                        Console.WriteLine("\nFile moved to destination: " + srcFileName_path);
-                                        
+                                        Tempfile.MoveTo(dest);
+                                        NoOfLogFilesToBeZipped += 1;
                                     }
-                                    else
-                                    {
-                                        Console.WriteLine("\nError: Failed to move following file to the destination" + srcFileName_path);
-                                    }
-                                }
-                                catch (IOException e)
-                                {
-                                    Console.WriteLine($"ERROR:\t{e.Message}");
-                                    Console.WriteLine(destFileName);
-                                }
-                                NoOfLogFilesNotConsidered += 1;
-
-                            }
 
                         }
+                        catch(Exception Ex)
+                        {
+                            Console.WriteLine(Ex.Message);
+                        }
                     }
-
                 }
-            } //Filter ends here
+            }
 
             else if (am == 1)
             {
 
-                Logger.Info("\n--------------------------Archiving files based on date/month embedded in the filenames------------------------\n");
+                Logger.Info("\n--------------------------Archiving files based on day,month & year embedded in the log filenames------------------------\n");
                
                 
                 var logFiles = Directory.EnumerateFiles(src);
@@ -138,7 +112,7 @@ namespace LogArchiveTool
                             string fileName = currentFile.Substring(src.Length);
                             DateTime date1 = DateTime.Parse(fileDate);   
                             TimeSpan diff = DateTime.Now.Subtract(date1);
-                            if (diff.TotalDays > archDuration)
+                            if (diff.TotalDays > archDuration) //Move all files except the last <archDuration> days
                                 {
                                     File.Move(currentFile, Path.Combine(dest, fileName));
                                     NoOfLogFilesToBeZipped += 1;
@@ -182,8 +156,9 @@ namespace LogArchiveTool
                 int nThreads = Convert.ToInt32(ConfigHelper.GetValue("nCPUThrds"));
                 int CmprssnLvl = Convert.ToInt32(ConfigHelper.GetValue("CmprssnLvl"));
 
-                string d = DateTime.Now.ToString().Replace('/', '_').Replace(' ', '_').Replace(':', '_');
-                string archiveName = Path.Combine(src, d);
+                string zipName = "LogArchive_" + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss").Replace('/', '_').Replace(' ', '_').Replace(':', '_');
+                
+                string archivePath_Name = Path.Combine(Program.zipDestination, zipName);
                 string zipSource = dest + "*.log";
                 //Process process = new Process();
                 try
@@ -194,18 +169,18 @@ namespace LogArchiveTool
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         FileName = zipExe,
-                        Arguments = "a -tzip -r -bb3 -mmt\"" + CmprssnLvl + "\" -mx\"" + nThreads + "\" \"" + archiveName + "\" \"" + zipSource
+                        Arguments = "a -tzip -r -bb3 -mmt\"" + CmprssnLvl + "\" -mx\"" + nThreads + "\" \"" + archivePath_Name + "\" \"" + zipSource
                     };
-                    Logger.Info("Creating ZipArchive -> " + archiveName + ".zip\n"); //+ "Source:" + source1);
+                    Logger.Info("Creating ZipArchive -> " + archivePath_Name + ".zip\n"); //+ "Source:" + source1);
                     NoOfLogFilesZipped += 1;
                     Process x = Process.Start(p);
                     string output = x.StandardOutput.ReadToEnd();
+                    int exitcode = x.ExitCode;
                     formattedOutput = RemoveMsg(output);
-                    Logger.Info(formattedOutput);
-                
+                    Logger.Info(formattedOutput);             
                     x.WaitForExit();
-                    //Console.ReadKey();
-                
+                    Logger.Info("7Zip Exit Code:" +exitcode);
+                    
                 }
                 catch (Exception Ex)
                 {
@@ -224,14 +199,14 @@ namespace LogArchiveTool
 
 
 
-        public int checkForOldZips(string src)
+        public int checkForOldZips()
         {
-            //string src = source;
+            string zipDest = Program.zipDestination;
             int status = 0;
             string pattern = @"^.*.zip";  //@"\d{2}_\d{2}_\d{4}_\d{1,2}_\d{1,2}_\d{1,2}_\w[AM].zip{1}"
             Regex rgx = new Regex(pattern);
 
-            var Files = Directory.EnumerateFiles(src);
+            var Files = Directory.EnumerateFiles(zipDest);
 
             foreach (string currentFile in Files)
             {
@@ -240,7 +215,8 @@ namespace LogArchiveTool
                 {
                     status = 1;
                     Console.WriteLine("Previously created archive exists", fileName);
-                    Logger.Error("Previously created archive exists -> " + fileName);
+                    Logger.Error("Previously created archive exists -> " + Path.Combine(src, fileName) + "\tKindly move the file:" + fileName);
+                    Logger.Info("Existing the Program...\n");
                 }
             }
             return (status);

@@ -15,6 +15,7 @@ namespace LogArchiveTool
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private static string source = ConfigHelper.GetValue("SourceFolder");
+        public static string zipDestination = ConfigHelper.GetValue("ZipDestinationFolder");
         static void Main(string[] args)
         {
 
@@ -38,12 +39,24 @@ namespace LogArchiveTool
                 }
 
                 Directory.CreateDirectory(ConfigHelper.GetValue("DestinationFolder"));
+
+                if (!Directory.Exists(zipDestination))
+                {
+                    Directory.CreateDirectory(zipDestination);
+                }
                 
-                //Zipper loZipper = new Zipper();
-                //loZipper.CompressFile();              
+                
+                              
                 #endregion Packaging
                 
                 Zipper compress = new Zipper();
+
+                int status = compress.checkForOldZips();
+                if (status == 1)
+                {
+                    return;
+                }
+            
 
                 int rtn = compress.InitSteps();
                 if (rtn == 1)
