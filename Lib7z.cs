@@ -79,8 +79,12 @@ namespace LogArchiveTool
                             
                                 if (diff.TotalDays > archDuration) //Move all files except the last <archDuration> days
                                     {
-                                        Tempfile.MoveTo(dest);
+                                        Tempfile.MoveTo(dest + Tempfile.Name);
                                         NoOfLogFilesToBeZipped += 1;
+                                    }
+                                else
+                                    {
+                                        NoOfLogFilesNotConsidered += 1;
                                     }
 
                         }
