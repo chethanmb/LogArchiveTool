@@ -47,9 +47,14 @@ namespace LogArchiveTool
                 
                 Zipper compress = new Zipper();
 
-                int status = compress.checkForOldZips();
-                if (status == 0)
+                string oldZipFileName = compress.checkForOldZips();
+
+                if ( oldZipFileName != null )
                 {   
+                    ZipFound = "ABORT: Old archive " + oldZipFileName + " found in " + zipDestination + NEW_LINE;                                                       
+                }
+                else
+                {
                     int rtn = compress.InitSteps();
                     if (rtn == 1)
                     {
@@ -57,17 +62,10 @@ namespace LogArchiveTool
                     }
                                         
                     zipOutMsg = compress.Zip();
-                                   
-                }
-                else
-                {
-                    ZipFound = "ABORT: Old archive found in " + zipDestination + NEW_LINE;
                 }
 
+                                 
                 
-                 
-                
-
                 #region Email
                // message = string.Empty;
 

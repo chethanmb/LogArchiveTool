@@ -179,7 +179,7 @@ namespace LogArchiveTool
                         FileName = zipExe,
                         Arguments = "a -tzip -r -bb3 -mmt\"" + CmprssnLvl + "\" -mx\"" + nThreads + "\" \"" + archivePath_Name + "\" \"" + zipSource
                     };
-                    Logger.Info("Creating ZipArchive -> " + archivePath_Name + ".zip\n"); //+ "Source:" + source1);
+                    Logger.Info("Creating ZipArchive -> " + archivePath_Name + ".zip\n"); 
                     NoOfLogFilesZipped += 1;
                     Process x = Process.Start(p);
                     string output = x.StandardOutput.ReadToEnd();
@@ -207,28 +207,30 @@ namespace LogArchiveTool
 
 
 
-        public int checkForOldZips()
+        public string checkForOldZips()
         {
             string zipDest = Program.zipDestination;
-            int status = 0;
-            string pattern = @"^.*.zip";  //@"\d{2}_\d{2}_\d{4}_\d{1,2}_\d{1,2}_\d{1,2}_\w[AM].zip{1}"
+            //int status = 0;
+            string fileName = null;
+            string pattern = @"LogArchive_\d{1,2}_\d{1,2}_\d{4}_\d{1,2}_\d{1,2}_\d{1,2}[.]zip{1}";   //  \LogArchive_\d{2}_\d{2}_\d{4}_\d{1,2}_\d{1,2}_\d{1,2}[.]zip{1}"  // "^.*.zip" 
             Regex rgx = new Regex(pattern);
 
             var Files = Directory.EnumerateFiles(zipDest);
 
             foreach (string currentFile in Files)
             {
-                string fileName = currentFile.Substring(src.Length);
+                fileName = currentFile.Substring(zipDest.Length);
                 if (rgx.IsMatch(fileName))
                 {
-                    status = 1;                   
+                    //status = 1;                   
                     Logger.Error("Old archive found in -> " + Path.Combine(src, fileName) + "\tKindly move the file:" + fileName);
                     Logger.Info("Exiting the Program...\n");
                 }
             }
-            return (status);
+            return (fileName);
         }
 
+       
 
         private string RemoveMsg(string output)
         {
